@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MangaVerse Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<style>
+:root{--bg:#090a0f;--surface:#11131b;--surface2:#181b25;--line:#292d3a;--text:#f7f7fb;--muted:#969bab;--accent:#8b5cf6;--ok:#22c55e;--danger:#ef4444}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,system-ui,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}
+.top{height:68px;display:flex;align-items:center;gap:16px;padding:0 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#090a0fee;backdrop-filter:blur(14px);z-index:10}.brand{font-size:20px;font-weight:900}.brand span{color:var(--accent)}.grow{flex:1}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 68px)}aside{border-right:1px solid var(--line);padding:18px;position:sticky;top:68px;height:calc(100vh - 68px)}.nav{display:grid;gap:7px}.nav button{border:1px solid transparent;background:transparent;color:#bbbfc9;text-align:left;padding:11px;border-radius:9px}.nav button.active,.nav button:hover{background:var(--surface2);border-color:var(--line);color:#fff}
+main{padding:28px;max-width:1400px;width:100%}.page{display:none}.page.active{display:block}.head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:20px}.head h1{margin:0;font-size:28px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}.stat b{font-size:28px}.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:15px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:11px}.table{width:100%;border-collapse:collapse;min-width:720px}.table th,.table td{padding:12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}.table th{color:#bfc2cd;background:var(--surface2)}.table tr:last-child td{border-bottom:0}
+.btn{border:0;border-radius:8px;padding:9px 13px;font-weight:800}.primary{background:var(--accent);color:#fff}.secondary{background:var(--surface2);color:#fff;border:1px solid var(--line)}.danger{background:#35171b;color:#ffb5b5;border:1px solid #5d252d}.ok{background:#12351f;color:#9bf2b5;border:1px solid #1f6134}.small{padding:6px 9px;font-size:12px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:6px}.field.full{grid-column:1/-1}.field label{font-weight:700;color:#d8dae1}.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--line);color:#fff;border-radius:8px;padding:10px;outline:0}.field textarea{min-height:100px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:var(--surface2);border:1px solid var(--line)}.badge.ok{background:#12351f;color:#9bf2b5}.badge.warn{background:#392d12;color:#f5d98b}.badge.bad{background:#35171b;color:#ffb5b5}
+.modal{display:none;position:fixed;inset:0;background:#000b;z-index:50;padding:18px;overflow:auto;align-items:center;justify-content:center}.modal.show{display:flex}.modalbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);padding:22px}.close{float:right;border:0;background:none;color:#fff;font-size:25px}.actions{display:flex;gap:7px;flex-wrap:wrap}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--surface2);border:1px solid var(--line);padding:12px 15px;border-radius:10px;display:none;z-index:100}.toast.show{display:block}
+@media(max-width:850px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap}.grid{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}}@media(max-width:520px){main{padding:18px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Manga<span>Verse</span> Admin</div>
+  <div class="grow"></div>
+  <span id="adminEmail" class="muted"></span>
+  <button class="btn secondary" onclick="location.href='index.html'">View site</button>
+  <button class="btn danger" onclick="logout()">Log out</button>
+</header>
+<div class="layout">
+<aside>
+  <div class="nav">
+    <button class="active" data-page="overview">📊 Overview</button>
+    <button data-page="titles">📚 Titles</button>
+    <button data-page="chapters">📖 Chapters</button>
+    <button data-page="submissions">📤 Submissions</button>
+    <button data-page="users">👥 Users</button>
+    <button data-page="comments">💬 Comments</button>
+  </div>
+</aside>
+<main>
+<section id="overview" class="page active">
+ <div class="head"><div><h1>Dashboard</h1><p class="muted">MangaVerse content and community management.</p></div><button class="btn primary" onclick="openTitleModal()">＋ Add title</button></div>
+ <div class="grid">
+  <div class="stat"><span class="muted">Users</span><br><b id="statUsers">—</b></div>
+  <div class="stat"><span class="muted">Titles</span><br><b id="statTitles">—</b></div>
+  <div class="stat"><span class="muted">Chapters</span><br><b id="statChapters">—</b></div>
+  <div class="stat"><span class="muted">Pending submissions</span><br><b id="statSubmissions">—</b></div>
+ </div>
+ <div class="card"><h3>Publishing checklist</h3><p class="muted">Only publish content you have the legal right or permission to distribute. Payment status must be verified by a trusted server/webhook before approval.</p></div>
+</section>
+
+<section id="titles" class="page">
+ <div class="head"><div><h1>Titles</h1><p class="muted">Manage the public catalog.</p></div><button class="btn primary" onclick="openTitleModal()">＋ Add title</button></div>
+ <div class="tablewrap"><table class="table"><thead><tr><th>Title</th><th>Status</th><th>Author</th><th>Created</th><th>Actions</th></tr></thead><tbody id="titlesBody"></tbody></table></div>
+</section>
+
+<section id="chapters" class="page">
+ <div class="head"><div><h1>Chapters</h1><p class="muted">Create chapters and control publication.</p></div><button class="btn primary" onclick="openChapterModal()">＋ Add chapter</button></div>
+ <div class="tablewrap"><table class="table"><thead><tr><th>Title</th><th>Chapter</th><th>Name</th><th>Published</th><th>Actions</th></tr></thead><tbody id="chaptersBody"></tbody></table></div>
+</section>
+
+<section id="submissions" class="page">
+ <div class="head"><div><h1>Submissions</h1><p class="muted">Review reader submissions after payment verification and rights checks.</p></div></div>
+ <div class="tablewrap"><table class="table"><thead><tr><th>Title</th><th>Reader</th><th>Payment</th><th>Review</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="submissionsBody"></tbody></table></div>
+</section>
+
+<section id="users" class="page">
+ <div class="head"><div><h1>Users</h1><p class="muted">Authenticated MangaVerse accounts.</p></div></div>
+ <div class="tablewrap"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Verified</th><th>Joined</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+</section>
+
+<section id="comments" class="page">
+ <div class="head"><div><h1>Comments</h1><p class="muted">Moderate community comments.</p></div></div>
+ <div class="tablewrap"><table class="table"><thead><tr><th>Title</th><th>User</th><th>Comment</th><th>Date</th><th>Action</th></tr></thead><tbody id="commentsBody"></tbody></table></div>
+</section>
+</main>
+</div>
+
+<div id="titleModal" class="modal"><div class="modalbox">
+<button class="close" onclick="closeModal('titleModal')">×</button><h2 id="titleModalHeading">Add title</h2>
+<form id="titleForm" class="formgrid">
+<input type="hidden" id="titleId">
+<div class="field"><label>Title</label><input id="titleName" required></div>
+<div class="field"><label>Status</label><select id="titleStatus"><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="hiatus">Hiatus</option></select></div>
+<div class="field"><label>Author</label><input id="titleAuthor"></div>
+<div class="field"><label>Artist</label><input id="titleArtist"></div>
+<div class="field full"><label>Cover URL</label><input id="titleCover" placeholder="https://..."></div>
+<div class="field full"><label>Description</label><textarea id="titleDescription"></textarea></div>
+<div class="field full actions"><button class="btn primary" type="submit">Save title</button><button class="btn secondary" type="button" onclick="closeModal('titleModal')">Cancel</button></div>
+</form></div></div>
+
+<div id="chapterModal" class="modal"><div class="modalbox">
+<button class="close" onclick="closeModal('chapterModal')">×</button><h2>Add chapter</h2>
+<form id="chapterForm" class="formgrid">
+<div class="field full"><label>Title</label><select id="chapterTitle" required></select></div>
+<div class="field"><label>Chapter number</label><input id="chapterNumber" type="number" step="0.01" required></div>
+<div class="field"><label>Chapter title</label><input id="chapterName"></div>
+<div class="field"><label>Publish now?</label><select id="chapterPublished"><option value="false">Draft</option><option value="true">Published</option></select></div>
+<div class="field full"><p class="muted">Chapter page uploads will be connected to Supabase Storage in the next publishing step. For now, create the chapter record here.</p></div>
+<div class="field full actions"><button class="btn primary" type="submit">Create chapter</button><button class="btn secondary" type="button" onclick="closeModal('chapterModal')">Cancel</button></div>
+</form></div></div>
+
+<div id="toast" class="toast"></div>
+<script>
+let sb, titles=[], chapters=[], submissions=[], users=[], comments=[];
+const $=id=>document.getElementById(id);
+function client(){return sb||(sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY))}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function closeModal(id){$(id).classList.remove('show')}
+function openTitleModal(t=null){$('titleForm').reset();$('titleId').value=t?.id||'';$('titleModalHeading').textContent=t?'Edit title':'Add title';if(t){$('titleName').value=t.title||'';$('titleStatus').value=t.status||'ongoing';$('titleAuthor').value=t.author||'';$('titleArtist').value=t.artist||'';$('titleCover').value=t.cover_url||'';$('titleDescription').value=t.description||''}$('titleModal').classList.add('show')}
+async function requireAdmin(){
+ const {data:{session},error}=await client().auth.getSession(); if(error||!session){location.href='index.html';return false}
+ $('adminEmail').textContent=session.user.email||'';
+ const {data,error:e}=await client().from('admin_users').select('user_id').eq('user_id',session.user.id).maybeSingle();
+ if(e||!data){document.body.innerHTML='<main style="padding:40px"><h1>Access denied</h1><p>This account is not an administrator.</p><button class="btn secondary" onclick="location.href=\'index.html\'">Back to MangaVerse</button></main>';return false}
+ return true;
+}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(b.dataset.page).classList.add('active');loadAll()});
+async function loadAll(){
+ const c=client();
+ const [t,ch,s,u,cm]=await Promise.all([
+  c.from('titles').select('*').order('created_at',{ascending:false}),
+  c.from('chapters').select('id,title_id,chapter_number,chapter_title,published,created_at,titles(title)').order('created_at',{ascending:false}),
+  c.from('submissions').select('id,submitted_by,proposed_title,payment_status,review_status,created_at,source_url,description').order('created_at',{ascending:false}),
+  c.from('users').select('id,display_name,email,email_verified,created_at').order('created_at',{ascending:false}),
+  c.from('comments').select('id,user_id,title_id,body,created_at,users(display_name,email),titles(title)').order('created_at',{ascending:false})
+ ]);
+ if(t.error) console.warn(t.error.message); if(ch.error) console.warn(ch.error.message); if(s.error) console.warn(s.error.message); if(u.error) console.warn(u.error.message); if(cm.error) console.warn(cm.error.message);
+ titles=t.data||[];chapters=ch.data||[];submissions=s.data||[];users=u.data||[];comments=cm.data||[];
+ $('statUsers').textContent=users.length;$('statTitles').textContent=titles.length;$('statChapters').textContent=chapters.length;$('statSubmissions').textContent=submissions.filter(x=>x.review_status==='pending').length;
+ renderTitles();renderChapters();renderSubmissions();renderUsers();renderComments();fillTitleSelect();
+}
+function renderTitles(){$('titlesBody').innerHTML=titles.map(t=>`<tr><td><b>${esc(t.title)}</b><br><span class="muted">${esc(t.description||'')}</span></td><td><span class="badge">${esc(t.status)}</span></td><td>${esc(t.author||'—')}</td><td>${new Date(t.created_at).toLocaleDateString()}</td><td class="actions"><button class="btn secondary small" onclick="openTitleModal(titles.find(x=>x.id==='${t.id}'))">Edit</button><button class="btn danger small" onclick="deleteTitle('${t.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">No titles.</td></tr>'}
+function renderChapters(){$('chaptersBody').innerHTML=chapters.map(c=>`<tr><td>${esc(c.titles?.title||'—')}</td><td>${esc(c.chapter_number)}</td><td>${esc(c.chapter_title||'')}</td><td>${c.published?'<span class="badge ok">Published</span>':'<span class="badge warn">Draft</span>'}</td><td><button class="btn ${c.published?'danger':'ok'} small" onclick="toggleChapter('${c.id}',${!c.published})">${c.published?'Unpublish':'Publish'}</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">No chapters.</td></tr>'}
+function renderSubmissions(){$('submissionsBody').innerHTML=submissions.map(s=>`<tr><td><b>${esc(s.proposed_title)}</b><br><span class="muted">${esc(s.source_url||'')}</span></td><td>${esc(s.submitted_by)}</td><td><span class="badge ${s.payment_status==='paid'?'ok':'warn'}">${esc(s.payment_status)}</span></td><td><span class="badge ${s.review_status==='approved'?'ok':s.review_status==='rejected'?'bad':'warn'}">${esc(s.review_status)}</span></td><td>${new Date(s.created_at).toLocaleDateString()}</td><td class="actions"><button class="btn ok small" onclick="reviewSubmission('${s.id}','approved')">Approve</button><button class="btn danger small" onclick="reviewSubmission('${s.id}','rejected')">Reject</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No submissions.</td></tr>'}
+function renderUsers(){$('usersBody').innerHTML=users.map(u=>`<tr><td>${esc(u.display_name)}</td><td>${esc(u.email)}</td><td>${u.email_verified?'<span class="badge ok">Verified</span>':'<span class="badge warn">Unverified</span>'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No users.</td></tr>'}
+function renderComments(){$('commentsBody').innerHTML=comments.map(c=>`<tr><td>${esc(c.titles?.title||'—')}</td><td>${esc(c.users?.display_name||c.users?.email||'User')}</td><td>${esc(c.body)}</td><td>${new Date(c.created_at).toLocaleString()}</td><td><button class="btn danger small" onclick="deleteComment('${c.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">No comments.</td></tr>'}
+function fillTitleSelect(){$('chapterTitle').innerHTML=titles.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}
+$('titleForm').onsubmit=async e=>{e.preventDefault();const payload={title:$('titleName').value.trim(),status:$('titleStatus').value,author:$('titleAuthor').value.trim()||null,artist:$('titleArtist').value.trim()||null,cover_url:$('titleCover').value.trim()||null,description:$('titleDescription').value.trim()||null};const id=$('titleId').value;const q=id?client().from('titles').update(payload).eq('id',id):client().from('titles').insert(payload);const {error}=await q;if(error)return alert(error.message);closeModal('titleModal');toast('Title saved');loadAll()}
+$('chapterForm').onsubmit=async e=>{e.preventDefault();const payload={title_id:$('chapterTitle').value,chapter_number:Number($('chapterNumber').value),chapter_title:$('chapterName').value.trim()||null,published:$('chapterPublished').value==='true'};const {error}=await client().from('chapters').insert(payload);if(error)return alert(error.message);closeModal('chapterModal');toast('Chapter created');loadAll()}
+function openChapterModal(){$('chapterForm').reset();fillTitleSelect();if(!titles.length)return alert('Create a title first.');$('chapterModal').classList.add('show')}
+async function deleteTitle(id){if(!confirm('Delete this title and its chapters?'))return;const {error}=await client().from('titles').delete().eq('id',id);if(error)return alert(error.message);toast('Title deleted');loadAll()}
+async function toggleChapter(id,published){const {error}=await client().from('chapters').update({published}).eq('id',id);if(error)return alert(error.message);toast(published?'Chapter published':'Chapter unpublished');loadAll()}
+async function reviewSubmission(id,status){const s=submissions.find(x=>x.id===id);if(!s)return;if(status==='approved'&&s.payment_status!=='paid')return alert('Payment is not verified. The payment must be marked paid by a trusted server/webhook before approval.');if(!confirm((status==='approved'?'Approve':'Reject')+' this submission?'))return;const {error}=await client().from('submissions').update({review_status:status}).eq('id',id);if(error)return alert(error.message);toast('Submission '+status);loadAll()}
+async function deleteComment(id){if(!confirm('Delete this comment?'))return;const {error}=await client().from('comments').delete().eq('id',id);if(error)return alert(error.message);toast('Comment deleted');loadAll()}
+async function logout(){await client().auth.signOut();location.href='index.html'}
+(async()=>{if(await requireAdmin())await loadAll()})();
+</script>
+</body>
+</html>
