@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MangaVerse — Production Prototype</title>
+<style>
+:root{--bg:#090a0f;--surface:#11131b;--surface2:#181b25;--line:#282c39;--text:#f7f7fb;--muted:#9297a8;--accent:#8b5cf6;--accent2:#a78bfa;--danger:#ef4444;--ok:#22c55e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}
+.top{height:66px;position:sticky;top:0;z-index:30;background:#090a0fe8;backdrop-filter:blur(14px);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 4%;gap:22px}.brand{font-size:21px;font-weight:900}.brand i{font-style:normal;color:var(--accent)}.nav{display:flex;gap:18px;color:#c7c9d3}.nav a:hover{color:white}.grow{flex:1}.search{width:260px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 13px;color:white;outline:0}.avatar{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:white;font-weight:800}.btn{border:0;border-radius:9px;padding:10px 15px;font-weight:800}.primary{background:var(--accent);color:#fff}.secondary{background:var(--surface2);border:1px solid var(--line);color:#fff}.danger{background:#3a171b;color:#ffb2b2;border:1px solid #60242b}
+main{max-width:1250px;width:92%;margin:auto}.hero{min-height:390px;display:flex;align-items:center;padding:55px 0;position:relative}.hero:after{content:"";position:absolute;right:-8%;top:0;width:55%;height:100%;background:linear-gradient(90deg,var(--bg),transparent),url("https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1100&q=80") center/cover;opacity:.32;z-index:-1}.eyebrow{color:var(--accent2);font-weight:900;text-transform:uppercase;letter-spacing:1.4px}.hero h1{font-size:clamp(44px,7vw,72px);line-height:.95;letter-spacing:-3px;margin:12px 0}.hero p{max-width:590px;color:#aeb2c0;font-size:16px}.row{display:flex;gap:10px;flex-wrap:wrap}.section{padding:25px 0 45px}.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.head h2{margin:0;font-size:23px}.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:.18s}.card:hover{transform:translateY(-4px);border-color:#4b3c6b}.cover{height:235px;background:center/cover;position:relative}.tag{position:absolute;left:8px;top:8px;background:var(--accent);padding:4px 7px;border-radius:6px;font-size:10px;font-weight:900}.score{position:absolute;right:8px;top:8px;background:#000b;padding:4px 7px;border-radius:6px}.cardbody{padding:11px}.title{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.muted{color:var(--muted);font-size:12px}.updates{display:grid;grid-template-columns:1fr 1fr;gap:10px}.update{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between}.chapter{background:var(--surface2);border:1px solid var(--line);border-radius:7px;padding:7px 9px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{background:var(--surface);border:1px solid var(--line);color:#ccc;padding:9px 14px;border-radius:999px}.chip:hover{border-color:var(--accent)}
+.overlay{display:none;position:fixed;inset:0;background:#000c;z-index:100;padding:18px;overflow:auto}.overlay.show{display:flex;align-items:center;justify-content:center}.modal{width:min(720px,100%);background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:23px}.modal h2{margin-top:0}.close{float:right;background:none;border:0;color:#fff;font-size:25px}.form{display:grid;gap:12px}.form input,.form select{width:100%;padding:12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:white;outline:0}.form input:focus{border-color:var(--accent)}.tabs{display:flex;gap:5px;margin-bottom:18px}.tab{flex:1;padding:10px;border:1px solid var(--line);background:var(--surface2);color:#bbb;border-radius:8px}.tab.active{background:var(--accent);color:white}
+.reader{position:fixed;inset:0;background:#050507;z-index:200;display:none;overflow:auto}.reader.show{display:block}.readerbar{height:60px;position:sticky;top:0;background:#08080de8;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px;padding:0 16px;z-index:2}.readerbar .grow{font-weight:800}.readerbody{width:min(900px,100%);margin:auto}.page{display:block;width:100%;max-width:900px;margin:auto}.readercontrols{position:sticky;bottom:15px;margin:20px auto;width:max-content;max-width:94%;background:#15151ddf;border:1px solid #333;border-radius:12px;padding:8px;display:flex;gap:8px;backdrop-filter:blur(10px)}.readercontrols button{background:#242431;border:1px solid #3a3a49;color:white;border-radius:8px;padding:9px 13px}
+.dashboard{display:none}.dashboard.show{display:block}.dashgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}.stat b{font-size:27px}.table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}.table th,.table td{padding:12px;text-align:left;border-bottom:1px solid var(--line)}footer{border-top:1px solid var(--line);padding:28px 4%;color:var(--muted);margin-top:30px}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(4,1fr)}.dashgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.nav{gap:8px}.navlinks{display:none}.search{display:none}.hero:after{width:100%;opacity:.18}.grid{grid-template-columns:repeat(2,1fr);gap:11px}.cover{height:235px}.updates{grid-template-columns:1fr}.dashgrid{grid-template-columns:1fr 1fr}.hero h1{letter-spacing:-2px}.readercontrols{width:94%;justify-content:center}}
+
+
+/* ===== Branding, Settings, Backup & Comments ===== */
+.brand{display:flex;align-items:center;gap:8px}
+.brandmark{width:35px;height:35px;flex:0 0 35px;filter:drop-shadow(0 6px 14px #8b5cf633)}
+.settings-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:white;font-size:18px;transition:.2s}
+.settings-btn:hover{transform:rotate(18deg) scale(1.05);border-color:var(--accent)}
+.card-actions{display:flex;gap:6px;margin-top:10px}
+.mini-btn{border:1px solid var(--line);background:var(--surface2);color:#cfd0d8;border-radius:7px;padding:6px 7px;font-size:11px;transition:.18s}
+.mini-btn:hover{color:white;border-color:#4b3c6b;transform:translateY(-1px)}
+.settings-modal{max-width:760px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.settings-grid label{display:grid;gap:7px;color:#cfd1da;font-weight:700}
+.settings-grid select{padding:11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:white}
+.settings-section{border-top:1px solid var(--line);margin-top:22px;padding-top:20px}
+.comments-modal{max-width:760px}
+.comments-list{max-height:430px;overflow:auto;display:grid;gap:10px;margin:18px 0}
+.comment{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.comment-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:5px}
+.comment-user{font-weight:800}.comment-time{color:var(--muted);font-size:11px}
+.comment-form{display:flex;gap:8px}
+.comment-form input{flex:1;padding:12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:white;outline:none}
+.comment-form input:focus{border-color:var(--accent)}
+body.light-mode{--bg:#f5f6fa;--surface:#fff;--surface2:#eeeef5;--line:#dddde6;--text:#15151b;--muted:#6d7080}
+body.light-mode .top{background:#f5f6fae8}
+body.light-mode .search,body.light-mode .settings-btn{color:#17171d}
+body.no-motion *,body.no-motion *:before,body.no-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media(max-width:650px){.settings-grid{grid-template-columns:1fr}.card-actions{flex-direction:column}.comment-form{flex-direction:column}}
+
+
+/* ===== Paid Reader Submission ===== */
+.notice{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:15px;margin:18px 0}
+.fee{border-color:#5b3a91;background:#211934}
+.consent{display:flex!important;grid-template-columns:none!important;align-items:flex-start;gap:9px;font-size:13px;color:#cfd1da;font-weight:500!important}
+.consent input{width:auto!important;margin-top:3px}
+.submission-modal{max-width:680px}
+.submission-modal textarea{font:inherit}
+
+
+/* ===== Publishing UI ===== */
+.publisher-modal{max-width:850px}
+.upload-box{display:grid!important;gap:8px;padding:14px;border:1px dashed #4a4d5c;border-radius:10px;background:var(--surface2);color:#d6d7df;font-weight:700}
+.upload-box input{color:var(--muted)}
+.page-preview{display:flex;gap:8px;overflow:auto;padding:5px 0;min-height:20px}
+.page-thumb{width:72px;height:100px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.published-badge{display:inline-block;padding:3px 7px;border-radius:5px;background:#12351f;color:#86efac;font-size:10px;font-weight:800}
+
+/* ===== MangaVerse Animation System ===== */
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 #8b5cf600}50%{box-shadow:0 0 28px 4px #8b5cf633}}
+@keyframes shimmer{0%{background-position:-500px 0}100%{background-position:500px 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.top{animation:fadeIn .55s ease both}
+.brand{transition:transform .2s ease}
+.brand:hover{transform:scale(1.04)}
+.nav a{position:relative;transition:color .2s ease}
+.nav a:after{content:"";position:absolute;left:0;bottom:-7px;width:0;height:2px;background:var(--accent);transition:width .25s ease}
+.nav a:hover:after{width:100%}
+.search{transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.search:focus{transform:translateY(-1px);box-shadow:0 6px 24px #0004}
+
+.hero>div{animation:fadeUp .75s cubic-bezier(.2,.8,.2,1) both}
+.hero:after{animation:fadeIn 1.2s ease both,float 7s ease-in-out 1.2s infinite}
+.eyebrow{animation:slideIn .65s ease .1s both}
+.hero h1{animation:fadeUp .7s ease .18s both}
+.hero p{animation:fadeUp .7s ease .28s both}
+.hero .row{animation:fadeUp .7s ease .38s both}
+
+.btn{transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0) scale(.97)}
+.primary:hover{box-shadow:0 8px 28px #8b5cf655}
+.avatar{transition:transform .2s ease,box-shadow .2s ease}
+.avatar:hover{transform:scale(1.08);box-shadow:0 0 0 4px #8b5cf622}
+
+.section{animation:fadeUp .65s ease both}
+.card{animation:fadeUp .55s ease both;animation-delay:calc(var(--i,0) * 55ms)}
+.card .cover{transition:transform .35s ease,filter .35s ease}
+.card:hover .cover{transform:scale(1.035);filter:saturate(1.12)}
+.card .tag,.card .score{transition:transform .25s ease}
+.card:hover .tag{transform:translateY(-2px)}
+.card:hover .score{transform:translateY(-2px)}
+.cardbody{transition:background .2s ease}
+.card:hover .cardbody{background:var(--surface2)}
+
+.update{transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.update:hover{transform:translateX(5px);border-color:#4b3c6b;box-shadow:0 8px 25px #0003}
+.chapter{transition:transform .18s ease,background .18s ease}
+.chapter:hover{transform:scale(1.04);background:#29293a}
+
+.chip{transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.chip:hover{transform:translateY(-2px)}
+
+.overlay{opacity:0;transition:opacity .22s ease;pointer-events:none}
+.overlay.show{opacity:1;pointer-events:auto}
+.overlay .modal{transform:translateY(20px) scale(.96);opacity:0;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .22s ease}
+.overlay.show .modal{transform:translateY(0) scale(1);opacity:1}
+.close{transition:transform .2s ease,color .2s ease}
+.close:hover{transform:rotate(90deg);color:#c4b5fd}
+
+.reader{opacity:0;transition:opacity .25s ease;pointer-events:none}
+.reader.show{opacity:1;pointer-events:auto}
+.readerbody{animation:fadeUp .45s ease both}
+.readerbar{animation:slideIn .35s ease both}
+.readercontrols{animation:fadeUp .4s ease .15s both}
+.readercontrols button{transition:transform .18s ease,background .18s ease}
+.readercontrols button:hover{transform:translateY(-2px);background:#303044}
+.readercontrols button:active{transform:scale(.96)}
+.page{animation:fadeIn .55s ease both}
+
+.stat{animation:fadeUp .55s ease both;transition:transform .2s ease,border-color .2s ease}
+.stat:hover{transform:translateY(-4px);border-color:#4b3c6b}
+.table tr{transition:background .18s ease}
+.table tr:hover{background:#191b25}
+
+.loading-shimmer{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:1000px 100%;animation:shimmer 1.5s infinite}
+.spinner{width:22px;height:22px;border:2px solid #ffffff33;border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
+
+@media(prefers-reduced-motion:reduce){
+ *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+</head>
+<body>
+<header class="top">
+<a class="brand" href="#" onclick="home()" aria-label="MangaVerse home">
+      <svg class="brandmark" viewBox="0 0 44 44" aria-hidden="true">
+        <defs><linearGradient id="mvgrad" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs>
+        <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#mvgrad)"/>
+        <path d="M13 12.5h11.5c3.6 0 6.5 2.9 6.5 6.5v12.5H19.5A6.5 6.5 0 0 1 13 25V12.5Z" fill="white" opacity=".96"/>
+        <path d="M18 16h8M18 20h9M18 24h6" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Manga<i>Verse</i></span>
+    </a>
+<nav class="nav"><a href="#library">Library</a><a href="#updates">Updates</a><a href="#genres">Genres</a></nav>
+<div class="grow"></div><input class="search" id="search" placeholder="Search titles..."><button class="settings-btn" onclick="openSettings()" title="Settings">⚙</button><button class="avatar" id="profileBtn" onclick="openAuth()">?</button>
+</header>
+
+<main id="site">
+<section class="hero">
+<div><div class="eyebrow">Production-ready prototype</div><h1>Your stories.<br><span style="color:var(--accent2)">Your library.</span></h1><p>A complete front-end foundation for a legal manhwa reading platform with authentication, profiles, bookmarks, chapter navigation, reader controls and an admin workspace.</p><div class="row"><button class="btn primary" onclick="openReader('Solo Leveling',210)">▶ Continue Reading</button><button class="btn secondary" onclick="document.querySelector('#library').scrollIntoView({behavior:'smooth'})">Browse Library</button><button class="btn secondary" onclick="openSubmission()">＋ Add Manhwa</button></div></div>
+</section>
+
+<section class="section" id="library"><div class="head"><h2>🔥 Trending</h2><span class="muted" id="resultCount"></span></div><div class="grid" id="grid"></div></section>
+<section class="section" id="updates"><div class="head"><h2>⚡ Latest Chapters</h2><span class="muted">Live demo data</span></div><div class="updates" id="updatesList"></div></section>
+<section class="section" id="genres"><div class="head"><h2>Browse Genres</h2></div><div class="chips"><button class="chip" onclick="filterGenre('Action')">Action</button><button class="chip" onclick="filterGenre('Fantasy')">Fantasy</button><button class="chip" onclick="filterGenre('Romance')">Romance</button><button class="chip" onclick="filterGenre('Drama')">Drama</button><button class="chip" onclick="filterGenre('Comedy')">Comedy</button><button class="chip" onclick="filterGenre('Adventure')">Adventure</button><button class="chip" onclick="filterGenre('Thriller')">Thriller</button></div></section>
+</main>
+
+<section class="dashboard" id="dashboard"><main><div class="section"><div class="head"><h2>Admin Dashboard</h2><div class="row"><button class="btn primary" onclick="openPublisher()">＋ Publish Manhwa</button><button class="btn secondary" onclick="showSite()">Back to site</button></div></div><div class="dashgrid"><div class="stat"><span class="muted">Users</span><br><b>12,842</b></div><div class="stat"><span class="muted">Titles</span><br><b>384</b></div><div class="stat"><span class="muted">Chapters</span><br><b>8,941</b></div><div class="stat"><span class="muted">Reports</span><br><b>7</b></div></div></div><div class="section"><h2>Content Management</h2><p class="muted">Prototype admin controls. Connect these actions to your server/API in production.</p><table class="table"><tr><th>Title</th><th>Status</th><th>Chapters</th><th>Action</th></tr><tr><td>Solo Leveling</td><td>Published</td><td>210</td><td><button class="btn secondary">Edit</button></td></tr><tr><td>Omniscient Reader</td><td>Published</td><td>182</td><td><button class="btn secondary">Edit</button></td></tr><tr><td>New Series</td><td>Draft</td><td>0</td><td><button class="btn primary">Publish</button></td></tr>
+</table></div>
+<div class="section">
+<h2>Reader Submissions</h2>
+<p class="muted">Review paid reader submissions and verify licensing/rights before publication.</p>
+<table class="table"><thead><tr><th>Title</th><th>Submitted by</th><th>Payment</th><th>Review</th><th>Action</th></tr></thead>
+<tbody id="submissionTable"></tbody></table>
+</div></main></section>
+
+<div class="overlay" id="auth"><div class="modal"><button class="close" onclick="closeAuth()">×</button><h2>Welcome to MangaVerse</h2><div class="tabs"><button class="tab active" id="loginTab" onclick="authMode('login')">Login</button><button class="tab" id="signupTab" onclick="authMode('signup')">Sign up</button></div><form class="form" onsubmit="fakeAuth(event)"><input id="name" placeholder="Full name" style="display:none"><input id="email" type="email" placeholder="Email address" required><input type="password" placeholder="Password" required><button class="btn primary" id="authSubmit">Login</button><p class="muted">Demo authentication only. Use a real auth provider/backend before launch.</p></form></div></div>
+
+<div class="overlay" id="profile"><div class="modal"><button class="close" onclick="closeProfile()">×</button><h2>Your Profile</h2><p class="muted" id="userText">Guest account</p><hr style="border-color:var(--line);border-width:1px 0 0;margin:20px 0"><h3>Bookmarks</h3><div id="bookmarks"></div><div class="row" style="margin-top:20px"><button class="btn secondary" onclick="closeProfile();openSubmission()">＋ Submit Manhwa</button><button class="btn secondary" onclick="openAdmin()">Admin demo</button><button class="btn danger" onclick="logout()">Log out</button></div></div></div>
+
+
+
+<div class="overlay" id="submission">
+  <div class="modal submission-modal">
+    <button class="close" onclick="closeSubmission()">×</button>
+    <h2>Submit a Manhwa</h2>
+    <p class="muted">Readers must have an account and pay the submission fee before a title can be submitted for review.</p>
+
+    <div id="submissionGuest" class="notice">
+      <b>Sign in required</b>
+      <p>You need a MangaVerse account before submitting a title.</p>
+      <button class="btn primary" onclick="closeSubmission();openAuth()">Sign in / Sign up</button>
+    </div>
+
+    <div id="submissionFormWrap" style="display:none">
+      <div class="notice fee"><b>Submission fee: ₦2,000</b><br><span class="muted">Payment covers the submission/review process. It does not guarantee publication.</span></div>
+      <form class="form" onsubmit="startSubmissionPayment(event)">
+        <input id="submitTitle" placeholder="Manhwa title" required>
+        <input id="submitAuthor" placeholder="Author / creator">
+        <input id="submitSource" type="url" placeholder="Official/licensed source URL" required>
+        <select id="submitGenre"><option>Action</option><option>Fantasy</option><option>Romance</option><option>Drama</option><option>Comedy</option><option>Adventure</option></select>
+        <textarea id="submitDescription" placeholder="Short description" rows="4" style="padding:12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:white;resize:vertical"></textarea>
+        <label class="consent"><input type="checkbox" id="rightsConfirm" required> I confirm I have the right/permission to submit this content for consideration.</label>
+        <button class="btn primary">Pay ₦2,000 & Submit</button>
+      </form>
+      <p class="muted" style="margin-top:10px">Production note: connect this button to Paystack/Flutterwave or another payment processor on the server. Never trust a client-side “paid” flag.</p>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="publisher">
+  <div class="modal publisher-modal">
+    <button class="close" onclick="closePublisher()">×</button>
+    <h2>Publish Manhwa</h2>
+    <p class="muted">Create a title, add a chapter and select its page images. This browser prototype stores the published catalog locally. A production server should upload these files to object storage/CDN.</p>
+
+    <div class="form">
+      <input id="pubTitle" placeholder="Manhwa title" required>
+      <input id="pubAuthor" placeholder="Author / creator">
+      <select id="pubGenre"><option>Action</option><option>Fantasy</option><option>Romance</option><option>Drama</option><option>Comedy</option><option>Adventure</option></select>
+      <textarea id="pubDescription" rows="3" placeholder="Description" style="padding:12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:white"></textarea>
+      <label class="upload-box">Cover image
+        <input id="pubCover" type="file" accept="image/*">
+      </label>
+      <input id="pubChapter" type="number" min="0.1" step="0.1" placeholder="Chapter number e.g. 1" required>
+      <input id="pubChapterTitle" placeholder="Chapter title (optional)">
+      <label class="upload-box">Chapter pages — select all pages in order
+        <input id="pubPages" type="file" accept="image/*" multiple required>
+      </label>
+      <div id="pagePreview" class="page-preview"></div>
+      <button class="btn primary" onclick="publishTitle()">Publish Manhwa & Chapter</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="settings">
+  <div class="modal settings-modal">
+    <button class="close" onclick="closeSettings()">×</button>
+    <h2>Settings</h2>
+    <p class="muted">Customize your MangaVerse experience and manage your data.</p>
+    <div class="settings-grid">
+      <label>Theme
+        <select id="themeSelect" onchange="applyTheme(this.value)">
+          <option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option>
+        </select>
+      </label>
+      <label>Accent color
+        <select id="accentSelect" onchange="applyAccent(this.value)">
+          <option value="purple">Purple</option><option value="blue">Blue</option><option value="pink">Pink</option><option value="green">Green</option>
+        </select>
+      </label>
+      <label>Reader mode
+        <select id="readerMode" onchange="saveSetting('readerMode',this.value)">
+          <option value="vertical">Vertical scroll</option><option value="single">Single page</option>
+        </select>
+      </label>
+      <label>Animation
+        <select id="motionSelect" onchange="applyMotion(this.value)">
+          <option value="full">Full</option><option value="reduced">Reduced</option>
+        </select>
+      </label>
+    </div>
+    <div class="settings-section">
+      <h3>Backup & Restore</h3>
+      <p class="muted">Back up bookmarks, reading progress, comments and settings to a JSON file.</p>
+      <div class="row">
+        <button class="btn primary" onclick="backupData()">⬇ Export Backup</button>
+        <button class="btn secondary" onclick="document.getElementById('restoreFile').click()">⬆ Restore Backup</button>
+        <input id="restoreFile" type="file" accept=".json,application/json" hidden onchange="restoreData(event)">
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn danger" onclick="clearLocalData()">Clear Local Data</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="comments">
+  <div class="modal comments-modal">
+    <button class="close" onclick="closeComments()">×</button>
+    <h2 id="commentsTitle">Comments</h2>
+    <div id="commentsList" class="comments-list"></div>
+    <form class="comment-form" onsubmit="addComment(event)">
+      <input id="commentInput" maxlength="500" placeholder="Write a comment..." required>
+      <button class="btn primary">Post</button>
+    </form>
+    <p class="muted" style="margin-top:10px">Be respectful. Comments are stored locally in this prototype.</p>
+  </div>
+</div>
+
+<div class="reader" id="reader"><div class="readerbar"><button class="btn secondary" onclick="closeReader()">← Back</button><div class="grow" id="readerName">Title</div><button class="btn secondary" onclick="toggleBookmark()">♡ Bookmark</button></div><div class="readerbody"><img class="page" id="page" src="" alt="Licensed chapter page placeholder"><div class="readercontrols"><button onclick="prevChapter()">← Previous</button><span id="chapterLabel" style="padding:9px 6px">Chapter</span><button onclick="nextChapter()">Next →</button></div></div></div>
+
+<footer>© 2026 MangaVerse • Prototype architecture • Publish only content you own or are licensed to distribute.</footer>
+
+<script>
+const books=[
+["Solo Leveling","Action • Fantasy","9.9","https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80",210],
+["Omniscient Reader","Action • Fantasy","9.8","https://images.unsplash.com/photo-1613376023733-0a73315d9b06?auto=format&fit=crop&w=600&q=80",182],
+["The Beginning After the End","Fantasy • Adventure","9.7","https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=600&q=80",201],
+["Eleceed","Action • Comedy","9.6","https://images.unsplash.com/photo-1608889825205-eebdb9fc5806?auto=format&fit=crop&w=600&q=80",369],
+["Mercenary Enrollment","Action • Drama","9.5","https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80",247],
+["The Greatest Estate Developer","Comedy • Fantasy","9.8","https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?auto=format&fit=crop&w=600&q=80",196],
+["Tower of God","Action • Fantasy","9.4","https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",651],
+["Romance 101","Romance • Drama","9.2","https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80",198]
+];
+let bookmarks=JSON.parse(localStorage.getItem('mv_bookmarks')||'[]'), user=JSON.parse(localStorage.getItem('mv_user')||'null'), current={title:'Solo Leveling',chapter:210};
+function animateReaderPage(){
+ const p=document.getElementById('page');
+ p.style.animation='none';
+ void p.offsetWidth;
+ p.style.animation='fadeIn .38s ease both';
+}
+
+const grid=document.getElementById('grid');
+function render(list=books){document.getElementById('resultCount').textContent=list.length+' titles';grid.innerHTML=list.map((b,i)=>`<article class="card" style="--i:${i}" onclick="openReader('${b[0].replaceAll("'","\\'")}',${b[4]})"><div class="cover" style="background-image:url('${b[3]}')"><span class="tag">${i<3?'HOT':'NEW'}</span><span class="score">★ ${b[2]}</span></div><div class="cardbody"><div class="title">${b[0]}</div><div class="muted">${b[1]} · ${b[4]} ch.</div>
+    <div class="card-actions"><button class="mini-btn" onclick="event.stopPropagation();openComments('${b[0].replaceAll("'","\\'")}')">💬 Comments</button>
+    <button class="mini-btn" onclick="event.stopPropagation();toggleTitleBookmark('${b[0].replaceAll("'","\\'")}')">♡ Save</button></div></div></article>`).join('')}
+render();
+document.getElementById('updatesList').innerHTML=books.slice(0,6).map(b=>`<div class="update"><div><b>${b[0]}</b><br><span class="muted">Updated recently</span></div><button class="chapter" onclick="openReader('${b[0].replaceAll("'","\\'")}',${b[4]})">Ch. ${b[4]}</button></div>`).join('');
+document.getElementById('search').oninput=e=>{let q=e.target.value.toLowerCase();render(books.filter(b=>(b[0]+' '+b[1]).toLowerCase().includes(q)))};
+function filterGenre(g){render(books.filter(b=>b[1].includes(g)));document.querySelector('#library').scrollIntoView({behavior:'smooth'})}
+function openReader(title,ch){current={title,chapter:ch};document.getElementById('readerName').textContent=title;document.getElementById('chapterLabel').textContent='Chapter '+ch;document.getElementById('page').src='https://images.unsplash.com/photo-1613376023733-0a73315d9b06?auto=format&fit=crop&w=1100&q=85';document.getElementById('reader').classList.add('show');document.body.style.overflow='hidden';animateReaderPage()}
+function closeReader(){document.getElementById('reader').classList.remove('show');document.body.style.overflow=''}
+function prevChapter(){if(current.chapter>1)openReader(current.title,current.chapter-1)}
+function nextChapter(){openReader(current.title,current.chapter+1)}
+function toggleBookmark(){if(bookmarks.includes(current.title))bookmarks=bookmarks.filter(x=>x!==current.title);else bookmarks.push(current.title);localStorage.setItem('mv_bookmarks',JSON.stringify(bookmarks));alert(bookmarks.includes(current.title)?'Bookmarked!':'Removed from bookmarks')}
+function openAuth(){document.getElementById('auth').classList.add('show')}
+function closeAuth(){document.getElementById('auth').classList.remove('show')}
+function authMode(mode){document.getElementById('name').style.display=mode==='signup'?'block':'none';document.getElementById('authSubmit').textContent=mode==='signup'?'Create account':'Login';document.getElementById('loginTab').classList.toggle('active',mode==='login');document.getElementById('signupTab').classList.toggle('active',mode==='signup')}
+function fakeAuth(e){e.preventDefault();let email=document.getElementById('email').value;user={name:email.split('@')[0],email};localStorage.setItem('mv_user',JSON.stringify(user));closeAuth();updateUser()}
+function updateUser(){document.getElementById('profileBtn').textContent=user?user.name[0].toUpperCase():'?'}
+function openProfile(){document.getElementById('profile').classList.add('show');document.getElementById('userText').textContent=user?user.name+' · '+user.email:'Guest account';document.getElementById('bookmarks').innerHTML=bookmarks.length?bookmarks.map(x=>`<button class="chip" onclick="closeProfile();openReader('${x.replaceAll("'","\\'")}',1)">${x}</button>`).join(' '):'<p class="muted">No bookmarks yet.</p>'}
+function closeProfile(){document.getElementById('profile').classList.remove('show')}
+function logout(){user=null;localStorage.removeItem('mv_user');closeProfile();updateUser()}
+document.getElementById('profileBtn').onclick=()=>user?openProfile():openAuth();
+
+function renderSubmissions(){
+ const body=document.getElementById('submissionTable'); if(!body)return;
+ body.innerHTML=submissions.length?submissions.map(s=>`<tr><td>${escapeHtml(s.title)}</td><td>${escapeHtml(s.submittedBy)}</td><td>${s.paymentStatus}</td><td>${s.reviewStatus}</td><td><button class="btn secondary" onclick="reviewSubmission('${s.id}')">Review</button></td></tr>`).join(''):'<tr><td colspan="5" class="muted">No reader submissions.</td></tr>';
+}
+function reviewSubmission(id){
+ const s=submissions.find(x=>x.id===id); if(!s)return;
+ if(s.paymentStatus!=='paid'){alert('Payment has not been verified by the server yet.');return}
+ const approve=confirm('Approve this submission for publication after verifying rights/licensing?');
+ s.reviewStatus=approve?'approved':'rejected';
+ localStorage.setItem('mv_submissions',JSON.stringify(submissions));renderSubmissions();
+}
+
+function openAdmin(){closeProfile();document.getElementById('site').style.display='none';document.querySelector('footer').style.display='none';document.getElementById('dashboard').classList.add('show');renderSubmissions()}
+function showSite(){document.getElementById('dashboard').classList.remove('show');document.getElementById('site').style.display='block';document.querySelector('footer').style.display='block'}
+function home(){showSite();window.scrollTo({top:0,behavior:'smooth'})}
+updateUser();
+
+/* ===== Settings, Backup/Restore & Comments ===== */
+let settings = JSON.parse(localStorage.getItem('mv_settings') || '{}');
+let comments = JSON.parse(localStorage.getItem('mv_comments') || '{}');
+let activeCommentsTitle = '';
+
+function saveSetting(key,value){settings[key]=value;localStorage.setItem('mv_settings',JSON.stringify(settings))}
+function applyTheme(value){
+  settings.theme=value; localStorage.setItem('mv_settings',JSON.stringify(settings));
+  document.body.classList.remove('light-mode');
+  if(value==='light') document.body.classList.add('light-mode');
+  if(value==='system' && matchMedia('(prefers-color-scheme: light)').matches) document.body.classList.add('light-mode');
+}
+function applyAccent(value){
+  settings.accent=value; localStorage.setItem('mv_settings',JSON.stringify(settings));
+  const map={purple:['#8b5cf6','#a78bfa'],blue:['#3b82f6','#60a5fa'],pink:['#ec4899','#f472b6'],green:['#22c55e','#4ade80']};
+  const colors=map[value]||map.purple;
+  document.documentElement.style.setProperty('--accent',colors[0]);
+  document.documentElement.style.setProperty('--accent2',colors[1]);
+}
+function applyMotion(value){
+  settings.motion=value;localStorage.setItem('mv_settings',JSON.stringify(settings));
+  document.body.classList.toggle('no-motion',value==='reduced');
+}
+function openSettings(){
+  document.getElementById('settings').classList.add('show');
+  document.getElementById('themeSelect').value=settings.theme||'dark';
+  document.getElementById('accentSelect').value=settings.accent||'purple';
+  document.getElementById('readerMode').value=settings.readerMode||'vertical';
+  document.getElementById('motionSelect').value=settings.motion||'full';
+}
+function closeSettings(){document.getElementById('settings').classList.remove('show')}
+function backupData(){
+  const data={version:1,exportedAt:new Date().toISOString(),user,bookmarks,settings,comments};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mangaverse-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);
+}
+function restoreData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || data.version!==1) throw new Error('Unsupported backup');
+      if(Array.isArray(data.bookmarks)) bookmarks=data.bookmarks;
+      if(data.user) user=data.user;
+      if(data.settings) settings=data.settings;
+      if(data.comments && typeof data.comments==='object') comments=data.comments;
+      localStorage.setItem('mv_bookmarks',JSON.stringify(bookmarks));
+      localStorage.setItem('mv_user',JSON.stringify(user));
+      localStorage.setItem('mv_settings',JSON.stringify(settings));
+      localStorage.setItem('mv_comments',JSON.stringify(comments));
+      applyTheme(settings.theme||'dark');applyAccent(settings.accent||'purple');applyMotion(settings.motion||'full');updateUser();
+      alert('Backup restored successfully.');
+      e.target.value='';
+    }catch(err){alert('This backup file is invalid or unsupported.')}
+  };
+  reader.readAsText(file);
+}
+function clearLocalData(){
+  if(!confirm('Clear local MangaVerse data? This removes demo bookmarks, comments, settings and session data.'))return;
+  ['mv_bookmarks','mv_user','mv_settings','mv_comments'].forEach(k=>localStorage.removeItem(k));
+  bookmarks=[];user=null;settings={};comments={};updateUser();applyTheme('dark');applyAccent('purple');applyMotion('full');closeSettings();alert('Local data cleared.');
+}
+function openComments(title){
+  activeCommentsTitle=title;
+  document.getElementById('commentsTitle').textContent=title+' — Comments';
+  renderComments();document.getElementById('comments').classList.add('show');
+}
+function closeComments(){document.getElementById('comments').classList.remove('show')}
+function renderComments(){
+  const list=comments[activeCommentsTitle]||[];
+  document.getElementById('commentsList').innerHTML=list.length?list.map(c=>`<div class="comment"><div class="comment-head"><span class="comment-user">${escapeHtml(c.user)}</span><span class="comment-time">${new Date(c.time).toLocaleString()}</span></div><div>${escapeHtml(c.text)}</div></div>`).join(''):'<p class="muted">No comments yet. Start the conversation.</p>';
+}
+function addComment(e){
+  e.preventDefault();
+  const input=document.getElementById('commentInput'),text=input.value.trim();if(!text)return;
+  const name=user?.name||'Guest Reader';
+  if(!comments[activeCommentsTitle])comments[activeCommentsTitle]=[];
+  comments[activeCommentsTitle].push({user:name,text,time:new Date().toISOString()});
+  localStorage.setItem('mv_comments',JSON.stringify(comments));input.value='';renderComments();
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function toggleTitleBookmark(title){
+  if(bookmarks.includes(title))bookmarks=bookmarks.filter(x=>x!==title);else bookmarks.push(title);
+  localStorage.setItem('mv_bookmarks',JSON.stringify(bookmarks));
+}
+applyTheme(settings.theme||'dark');applyAccent(settings.accent||'purple');applyMotion(settings.motion||'full');
+
+
+/* ===== Reader Submission + Payment Flow ===== */
+let submissions = JSON.parse(localStorage.getItem('mv_submissions') || '[]');
+
+function openSubmission(){
+  document.getElementById('submission').classList.add('show');
+  const guest=document.getElementById('submissionGuest'), form=document.getElementById('submissionFormWrap');
+  if(user){guest.style.display='none';form.style.display='block'}else{guest.style.display='block';form.style.display='none'}
+}
+function closeSubmission(){document.getElementById('submission').classList.remove('show')}
+function startSubmissionPayment(e){
+  e.preventDefault();
+  if(!user){closeSubmission();openAuth();return}
+  const submission={
+    id:'sub_'+Date.now(),
+    title:document.getElementById('submitTitle').value.trim(),
+    author:document.getElementById('submitAuthor').value.trim(),
+    source:document.getElementById('submitSource').value.trim(),
+    genre:document.getElementById('submitGenre').value,
+    description:document.getElementById('submitDescription').value.trim(),
+    submittedBy:user.email,
+    paymentStatus:'pending',
+    reviewStatus:'pending',
+    createdAt:new Date().toISOString()
+  };
+  /*
+    PRODUCTION:
+    1. Send submission metadata to your backend.
+    2. Backend creates a payment transaction with Paystack/Flutterwave.
+    3. Redirect the reader to the payment checkout.
+    4. Payment provider calls your webhook.
+    5. Backend verifies the transaction server-side.
+    6. Mark paymentStatus='paid' and reviewStatus='pending'.
+    7. Admin reviews licensing/rights before publication.
+  */
+  submissions.push(submission);
+  localStorage.setItem('mv_submissions',JSON.stringify(submissions));
+  alert('Demo payment checkout would open here. The submission has been saved as pending in this prototype.');
+  closeSubmission();
+}
+
+
+/* ===== Local Publishing Prototype ===== */
+const publishedTitles = JSON.parse(localStorage.getItem('mv_published_titles') || '[]');
+let publisherFiles = {cover:null,pages:[]};
+
+function openPublisher(){
+  document.getElementById('publisher').classList.add('show');
+  publisherFiles={cover:null,pages:[]};
+  document.getElementById('pagePreview').innerHTML='';
+}
+function closePublisher(){document.getElementById('publisher').classList.remove('show')}
+document.getElementById('pubCover')?.addEventListener('change',e=>{
+  publisherFiles.cover=e.target.files[0]||null;
+});
+document.getElementById('pubPages')?.addEventListener('change',e=>{
+  publisherFiles.pages=Array.from(e.target.files||[]).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+  document.getElementById('pagePreview').innerHTML=publisherFiles.pages.map(f=>`<img class="page-thumb" src="${URL.createObjectURL(f)}" title="${escapeHtml(f.name)}">`).join('');
+});
+
+async function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);
+  });
+}
+async function publishTitle(){
+  if(!user){alert('Admin must be signed in.');return}
+  const title=document.getElementById('pubTitle').value.trim();
+  const chapter=Number(document.getElementById('pubChapter').value);
+  if(!title || !chapter || !publisherFiles.pages.length){alert('Add a title, chapter number and at least one page.');return}
+  const cover=publisherFiles.cover?await fileToDataURL(publisherFiles.cover):'';
+  const pages=await Promise.all(publisherFiles.pages.map(fileToDataURL));
+  const item={
+    id:'local_'+Date.now(),title,
+    author:document.getElementById('pubAuthor').value.trim(),
+    genre:document.getElementById('pubGenre').value,
+    description:document.getElementById('pubDescription').value.trim(),
+    cover,published:true,
+    chapters:[{
+      number:chapter,
+      name:document.getElementById('pubChapterTitle').value.trim(),
+      pages,
+      publishedAt:new Date().toISOString()
+    }]
+  };
+  publishedTitles.push(item);
+  localStorage.setItem('mv_published_titles',JSON.stringify(publishedTitles));
+  closePublisher();
+  renderPublishedCatalog();
+  alert(title+' has been published in this browser prototype.');
+}
+function renderPublishedCatalog(){
+  const old=document.getElementById('publishedSection'); if(old)old.remove();
+  if(!publishedTitles.length)return;
+  const section=document.createElement('section');
+  section.id='publishedSection';section.className='section';
+  section.innerHTML='<div class="head"><h2>📚 Published by MangaVerse</h2><span class="published-badge">LIVE</span></div><div class="grid">'+publishedTitles.map((b,i)=>`
+    <article class="card" style="--i:${i}" onclick="openPublishedReader('${b.id}')">
+      <div class="cover" style="background-image:url('${b.cover||'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}')"><span class="tag">PUBLISHED</span></div>
+      <div class="cardbody"><div class="title">${escapeHtml(b.title)}</div><div class="muted">${escapeHtml(b.genre)} · ${b.chapters.length} chapter${b.chapters.length===1?'':'s'}</div></div>
+    </article>`).join('')+'</div>';
+  document.getElementById('site').appendChild(section);
+}
+function openPublishedReader(id){
+  const b=publishedTitles.find(x=>x.id===id);if(!b)return;
+  const ch=b.chapters[0];
+  document.getElementById('readerName').textContent=b.title;
+  document.getElementById('chapterLabel').textContent='Chapter '+ch.number;
+  const body=document.querySelector('#reader .readerbody');
+  body.innerHTML='<div id="publishedPages"></div><div class="readercontrols"><button onclick="closeReader()">← Back</button><span id="chapterLabel">Chapter '+ch.number+'</span></div>';
+  document.getElementById('publishedPages').innerHTML=ch.pages.map((p,i)=>`<img class="page" src="${p}" alt="Page ${i+1}">`).join('');
+  document.getElementById('reader').classList.add('show');document.body.style.overflow='hidden';
+}
+renderPublishedCatalog();
+
+</script>
+<script src="supabase-data.js"></script>
+</body></html>
