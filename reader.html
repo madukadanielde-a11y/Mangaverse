@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MangaVerse Reader</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0d12;color:#f4f5f7;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#11141b;border-bottom:1px solid #242936}
+button{border:0;border-radius:10px;padding:10px 14px;background:#6d5dfc;color:white;font-weight:700;cursor:pointer}
+button.secondary{background:#242936}.title{font-weight:800;flex:1}.status{font-size:12px;color:#aeb5c3}
+#pages{max-width:900px;margin:auto;padding:16px}.page{display:block;width:100%;height:auto;margin:0 auto 10px;border-radius:3px}
+.empty{padding:60px 20px;text-align:center;color:#aeb5c3}
+@media(max-width:600px){.top{padding:10px}.title{font-size:14px}.status{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+<button class="secondary" onclick="history.back()">← Back</button>
+<div class="title" id="chapterTitle">MangaVerse Reader</div>
+<div class="status" id="saveStatus">Not signed in</div>
+<button onclick="nextChapter()">Next →</button>
+</header>
+<main id="pages"><div class="empty">Loading chapter…</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const params=new URLSearchParams(location.search);
+const chapterId=params.get('chapter');
+let session=null, pages=[], currentPage=0;
+
+async function init(){
+ const s=await sb.auth.getSession(); session=s.data.session;
+ if(!chapterId){return showEmpty('No chapter selected.')}
+ const {data:chapter,error}=await sb.from('chapters').select('id,title,chapter_number,published,title_id').eq('id',chapterId).single();
+ if(error||!chapter){return showEmpty('Chapter not found.')}
+ if(!chapter.published && !session){return showEmpty('This chapter is not published.')}
+ document.title=(chapter.title||('Chapter '+chapter.chapter_number))+' — MangaVerse';
+ document.getElementById('chapterTitle').textContent=chapter.title||('Chapter '+chapter.chapter_number);
+ document.getElementById('saveStatus').textContent=session?'Saving progress…':'Sign in to save progress';
+ const r=await sb.from('media_assets').select('id,cdn_url,storage_key,page_number').eq('chapter_id',chapterId).order('page_number');
+ if(r.error)return showEmpty('Unable to load chapter pages.');
+ pages=r.data||[];
+ if(!pages.length)return showEmpty('This chapter has no pages yet.');
+ render();
+ if(session) restoreProgress();
+}
+function showEmpty(t){document.getElementById('pages').innerHTML='<div class="empty">'+t+'</div>'}
+function render(){
+ const root=document.getElementById('pages'); root.innerHTML='';
+ pages.forEach((p,i)=>{const img=document.createElement('img');img.className='page';img.src=p.cdn_url || '';img.alt='Page '+(p.page_number??i+1);img.loading=i<2?'eager':'lazy';img.addEventListener('load',()=>{if(i>=currentPage) saveProgress(i)});root.appendChild(img)});
+}
+async function restoreProgress(){
+ const r=await sb.from('reading_progress').select('page_number').eq('chapter_id',chapterId).eq('user_id',session.user.id).maybeSingle();
+ if(!r.error&&r.data&&Number.isFinite(r.data.page_number)){currentPage=Math.max(0,r.data.page_number);setTimeout(()=>document.querySelectorAll('.page')[currentPage]?.scrollIntoView({block:'start'}),250)}
+ document.getElementById('saveStatus').textContent='Progress synced';
+}
+let saveTimer;
+async function saveProgress(i){
+ if(!session)return;
+ currentPage=Math.max(currentPage,i);
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(async()=>{
+  const payload={user_id:session.user.id,chapter_id:chapterId,page_number:currentPage,updated_at:new Date().toISOString()};
+  const r=await sb.from('reading_progress').upsert(payload,{onConflict:'user_id,chapter_id'});
+  document.getElementById('saveStatus').textContent=r.error?'Sync failed':'Progress saved';
+ },300);
+}
+async function nextChapter(){
+ const c=await sb.from('chapters').select('id').eq('title_id',(await sb.from('chapters').select('title_id').eq('id',chapterId).single()).data.title_id).eq('published',true).gt('chapter_number',(await sb.from('chapters').select('chapter_number').eq('id',chapterId).single()).data.chapter_number).order('chapter_number').limit(1).maybeSingle();
+ if(c.data) location.href='reader.html?chapter='+c.data.id; else alert('You reached the latest chapter.');
+}
+init();
+</script>
+</body>
+</html>
